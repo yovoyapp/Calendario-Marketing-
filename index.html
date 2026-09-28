@@ -1,1 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calendario de videos</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDEFF4; --surface:#FFFFFF; --ink:#1C2230; --muted:#6B7285; --line:#D9DCE5;
+  --empty:#E3E6ED; --today:#3A3FD6;
+  --ig:#E1306C; --tt:#00B8B0; --yt:#E62117; --tw:#1D9BF0;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#12151D; --surface:#1B202B; --ink:#EEF0F6; --muted:#9097AA; --line:#2C3342;
+    --empty:#2A3040; --today:#8A8FFF;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12151D; --surface:#1B202B; --ink:#EEF0F6; --muted:#9097AA; --line:#2C3342;
+  --empty:#2A3040; --today:#8A8FFF;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.45;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--today);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 48px}
 
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}
+h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:-.03em;line-height:1;margin:0}
+.monthnav{display:flex;align-items:center;gap:6px}
+.monthnav button{background:var(--surface);border:1px solid var(--line);border-radius:10px;width:40px;height:40px;font-size:1.2rem}
+.monthnav .label{min-width:9.5em;text-align:center;font-weight:600;font-size:1.1rem;text-transform:capitalize}
+.monthnav .hoy{width:auto;padding:0 12px;font-size:.9rem}
+
+.summary{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin:0 0 16px;color:var(--muted);font-size:.95rem}
+.summary strong{color:var(--ink);font-size:1.25rem;font-weight:800}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-left:auto}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dow{text-align:center;font-size:.8rem;color:var(--muted);padding-bottom:2px}
+.day{
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:8px 7px 9px;min-height:92px;text-align:left;display:flex;flex-direction:column;gap:6px;
+}
+.day.out{visibility:hidden}
+.day.today{border-color:var(--today);box-shadow:inset 0 0 0 1px var(--today)}
+.day .num{font-weight:600;font-size:.95rem;display:flex;justify-content:space-between;align-items:baseline}
+.day .num small{font-weight:400;color:var(--muted);font-size:.72rem}
+.day.full .num small{color:var(--ink);font-weight:600}
+.bars{display:flex;flex-direction:column;gap:4px;margin-top:auto}
+.bar{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+.bar i{height:7px;border-radius:2px;background:var(--empty)}
+.bar i.on.ig{background:var(--ig)} .bar i.on.tt{background:var(--tt)}
+.bar i.on.yt{background:var(--yt)} .bar i.on.tw{background:var(--tw)}
+
+.hint{color:var(--muted);font-size:.85rem;margin:12px 0 0}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.tools button,.tools label{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:.9rem;cursor:pointer}
+.tools input{display:none}
+
+/* Visitas semanales */
+.views{margin-top:40px}
+.views h2{font-size:clamp(1.5rem,4.5vw,2rem);font-weight:800;letter-spacing:-.02em;margin:0 0 4px}
+.views .intro{color:var(--muted);margin:0 0 14px;font-size:.95rem}
+.vsum{background:var(--ink);color:var(--bg);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 22px}
+.vsum .big{font-size:clamp(1.8rem,6vw,2.4rem);font-weight:800;letter-spacing:-.02em;line-height:1}
+.vsum .big small{font-size:.9rem;font-weight:400;margin-left:6px;opacity:.75}
+.vsum .per{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem}
+.vsum .per span{display:inline-flex;align-items:center;gap:6px}
+.weeks{display:grid;gap:10px}
+.week{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.week.current{border-color:var(--today)}
+.week-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.week-head b{font-size:1.05rem}
+.week-head em{font-style:normal;color:var(--today);font-size:.85rem;margin-left:6px}
+.wtotal{color:var(--muted);font-size:.9rem}
+.wtotal strong{color:var(--ink);font-size:1.35rem;font-weight:800;margin-right:4px}
+.vin{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.v{display:flex;flex-direction:column;gap:6px;font-size:.82rem;font-weight:600;border-top:4px solid var(--line);padding-top:7px}
+.v.ig{border-color:var(--ig)} .v.tt{border-color:var(--tt)} .v.yt{border-color:var(--yt)} .v.tw{border-color:var(--tw)}
+.v input{width:100%;font:inherit;font-size:1.05rem;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
+.v input:focus-visible{outline:3px solid var(--today);outline-offset:1px}
+
+/* Panel del día */
+.backdrop{position:fixed;inset:0;background:rgba(10,12,20,.45);display:none;z-index:10}
+.backdrop.open{display:block}
+.panel{
+  position:fixed;left:50%;bottom:0;transform:translate(-50%,100%);width:min(560px,100%);
+  max-height:88vh;overflow:auto;background:var(--surface);border-radius:20px 20px 0 0;
+  padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));z-index:11;transition:transform .25s ease;
+}
+.panel.open{transform:translate(-50%,0)}
+@media (min-width:700px){
+  .panel{bottom:auto;top:50%;transform:translate(-50%,-40%);opacity:0;pointer-events:none;border-radius:20px;transition:opacity .2s,transform .2s}
+  .panel.open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
+}
+.panel h2{margin:0;font-size:1.5rem;font-weight:800;letter-spacing:-.02em;text-transform:capitalize}
+.panel .sub{color:var(--muted);margin:2px 0 14px}
+.panel .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.close{background:none;border:none;font-size:1.6rem;line-height:1;padding:4px 8px}
+.slot{border-top:1px solid var(--line);padding:14px 0}
+.slot-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.slot-head b{font-size:1.2rem}
+.slot-head span{color:var(--muted);font-size:.85rem;margin-left:8px}
+.all{background:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.85rem}
+.plats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.plat{
+  border:2px solid var(--line);background:transparent;border-radius:12px;padding:10px 4px;
+  font-size:.85rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.plat .check{width:20px;height:20px;border-radius:6px;border:2px solid currentColor;display:grid;place-items:center;font-size:.8rem;opacity:.5}
+.plat[aria-pressed="true"]{color:#fff}
+.plat[aria-pressed="true"] .check{opacity:1;background:rgba(255,255,255,.25)}
+.plat.ig[aria-pressed="true"]{background:var(--ig);border-color:var(--ig)}
+.plat.tt[aria-pressed="true"]{background:var(--tt);border-color:var(--tt)}
+.plat.yt[aria-pressed="true"]{background:var(--yt);border-color:var(--yt)}
+.plat.tw[aria-pressed="true"]{background:var(--tw);border-color:var(--tw)}
+.dayall{width:100%;margin-top:6px;padding:12px;border-radius:12px;border:none;background:var(--ink);color:var(--bg);font-weight:600}
+.clear{width:100%;margin-top:8px;padding:10px;border-radius:12px;border:1px solid var(--line);background:none;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem;opacity:0;transition:opacity .2s;z-index:20;pointer-events:none}
+.toast.show{opacity:1}
+
+@media (max-width:520px){
+  .grid{gap:4px}
+  .day{min-height:72px;padding:6px 4px;border-radius:9px}
+  .day .num small{display:none}
+  .bar i{height:5px}
+  .legend{margin-left:0}
+  .vin{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mis videos programados</h1>
+    <div class="monthnav">
+      <button id="prev" aria-label="Mes anterior">‹</button>
+      <div class="label" id="monthLabel"></div>
+      <button id="next" aria-label="Mes siguiente">›</button>
+      <button class="hoy" id="today">Hoy</button>
+    </div>
+  </header>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="grid" id="grid"></div>
+  <p class="hint">Toca un día para marcar qué videos programaste. Cada barra es un horario (12 PM, 6 PM y 8 PM) y cada color una red social.</p>
+
+  <section class="views" aria-labelledby="viewsTitle">
+    <h2 id="viewsTitle">Visitas por semana</h2>
+    <p class="intro">Escribe las visitas que obtuviste en cada red al terminar la semana. El total se suma solo.</p>
+    <div class="vsum" id="vsum"></div>
+    <div class="weeks" id="weeks"></div>
+  </section>
+
+  <div class="tools">
+    <button id="export">Descargar respaldo</button>
+    <label>Cargar respaldo<input type="file" id="import" accept="application/json"></label>
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle">
+  <div class="top">
+    <div>
+      <h2 id="panelTitle"></h2>
+      <p class="sub" id="panelSub"></p>
+    </div>
+    <button class="close" id="close" aria-label="Cerrar">×</button>
+  </div>
+  <div id="slots"></div>
+  <button class="dayall" id="dayAll">Marcar todo el día</button>
+  <button class="clear" id="dayClear">Borrar este día</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SLOTS=[{id:"12",label:"12 PM"},{id:"18",label:"6 PM"},{id:"20",label:"8 PM"}];
+const PLATS=[{id:"ig",name:"Instagram"},{id:"tt",name:"TikTok"},{id:"yt",name:"YouTube"},{id:"tw",name:"Twitter"}];
+const TOTAL=SLOTS.length*PLATS.length;
+const KEY="calendario-videos-v1";
+const VKEY="visitas-semanales-v1";
+
+function load(k){try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return {}}}
+let data=load(KEY);
+let views=load(VKEY);
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){toast("No se pudo guardar en este navegador")}}
+function saveViews(){try{localStorage.setItem(VKEY,JSON.stringify(views))}catch(e){toast("No se pudo guardar en este navegador")}}
+
+const now=new Date();
+let viewY=now.getFullYear(),viewM=now.getMonth(),openKey=null;
+
+const pad=n=>String(n).padStart(2,"0");
+const keyOf=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
+const keyDate=d=>keyOf(d.getFullYear(),d.getMonth(),d.getDate());
+const fmtN=n=>Number(n).toLocaleString("es");
+const isOn=(k,s,p)=>!!(data[k]&&data[k][s]&&data[k][s][p]);
+function countDay(k){let c=0;SLOTS.forEach(s=>PLATS.forEach(p=>{if(isOn(k,s.id,p.id))c++}));return c}
+function setVal(k,s,p,v){
+  data[k]=data[k]||{};data[k][s]=data[k][s]||{};
+  if(v)data[k][s][p]=true;else delete data[k][s][p];
+  if(!Object.keys(data[k][s]).length)delete data[k][s];
+  if(!Object.keys(data[k]).length)delete data[k];
+}
+function mondayOf(date){const d=new Date(date.getFullYear(),date.getMonth(),date.getDate());d.setDate(d.getDate()-((d.getDay()+6)%7));return d}
+
+function render(){
+  const label=new Date(viewY,viewM,1).toLocaleDateString("es",{month:"long",year:"numeric"});
+  document.getElementById("monthLabel").textContent=label;
+  const grid=document.getElementById("grid");grid.innerHTML="";
+  ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].forEach(d=>{const e=document.createElement("div");e.className="dow";e.textContent=d;grid.appendChild(e)});
+  const first=(new Date(viewY,viewM,1).getDay()+6)%7;
+  const days=new Date(viewY,viewM+1,0).getDate();
+  for(let i=0;i<first;i++){const e=document.createElement("div");e.className="day out";grid.appendChild(e)}
+  let done=0,fullDays=0,platCount={ig:0,tt:0,yt:0,tw:0};
+  const todayKey=keyDate(now);
+  for(let d=1;d<=days;d++){
+    const k=keyOf(viewY,viewM,d),c=countDay(k);
+    done+=c;if(c===TOTAL)fullDays++;
+    PLATS.forEach(p=>SLOTS.forEach(s=>{if(isOn(k,s.id,p.id))platCount[p.id]++}));
+    const b=document.createElement("button");
+    b.className="day"+(k===todayKey?" today":"")+(c===TOTAL?" full":"");
+    b.setAttribute("aria-label",`${d}: ${c} de ${TOTAL} programados`);
+    let bars="";
+    SLOTS.forEach(s=>{bars+=`<div class="bar">${PLATS.map(p=>`<i class="${p.id}${isOn(k,s.id,p.id)?" on":""}"></i>`).join("")}</div>`});
+    b.innerHTML=`<div class="num">${d}<small>${c}/${TOTAL}</small></div><div class="bars">${bars}</div>`;
+    b.onclick=()=>openDay(k);
+    grid.appendChild(b);
+  }
+  const total=days*TOTAL;
+  document.getElementById("summary").innerHTML=
+    `<span><strong>${done}</strong> programados</span>
+     <span><strong>${total-done}</strong> sin programar</span>
+     <span><strong>${fullDays}</strong> días completos</span>
+     <span class="legend">${PLATS.map(p=>`<span><i class="dot" style="background:var(--${p.id})"></i>${p.name} ${platCount[p.id]}</span>`).join("")}</span>`;
+  renderViews();
+}
+
+/* ---------- Visitas semanales ---------- */
+function weekTotal(k){const w=views[k]||{};return PLATS.reduce((a,p)=>a+(Number(w[p.id])||0),0)}
+function monthWeeks(){
+  const list=[];let d=mondayOf(new Date(viewY,viewM,1));
+  const last=new Date(viewY,viewM+1,0);
+  while(d<=last){list.push(new Date(d));d.setDate(d.getDate()+7)}
+  return list;
+}
+function renderViews(){
+  const box=document.getElementById("weeks");box.innerHTML="";
+  const fmt=x=>x.toLocaleDateString("es",{day:"numeric",month:"short"});
+  const thisWeek=keyDate(mondayOf(now));
+  monthWeeks().forEach(start=>{
+    const k=keyDate(start);
+    const end=new Date(start);end.setDate(end.getDate()+6);
+    const card=document.createElement("div");
+    card.className="week"+(k===thisWeek?" current":"");
+    card.innerHTML=`<div class="week-head"><b>${fmt(start)} – ${fmt(end)}${k===thisWeek?"<em>esta semana</em>":""}</b><span class="wtotal"></span></div>
+      <div class="vin">${PLATS.map(p=>{const v=views[k]&&views[k][p.id]!=null?views[k][p.id]:"";
+        return `<label class="v ${p.id}"><span>${p.name}</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-p="${p.id}" value="${v}"></label>`}).join("")}</div>`;
+    const upd=()=>{card.querySelector(".wtotal").innerHTML=`<strong>${fmtN(weekTotal(k))}</strong>visitas en la semana`};
+    card.querySelectorAll("input").forEach(inp=>{
+      inp.oninput=()=>{
+        const n=inp.value===""?NaN:Math.max(0,Math.round(Number(inp.value)));
+        views[k]=views[k]||{};
+        if(isNaN(n))delete views[k][inp.dataset.p];else views[k][inp.dataset.p]=n;
+        if(!Object.keys(views[k]).length)delete views[k];
+        saveViews();upd();renderViewsSummary();
+      };
+    });
+    upd();box.appendChild(card);
+  });
+  renderViewsSummary();
+}
+function renderViewsSummary(){
+  const per={ig:0,tt:0,yt:0,tw:0};
+  monthWeeks().forEach(s=>{const w=views[keyDate(s)]||{};PLATS.forEach(p=>per[p.id]+=Number(w[p.id])||0)});
+  const sum=Object.values(per).reduce((a,b)=>a+b,0);
+  const month=new Date(viewY,viewM,1).toLocaleDateString("es",{month:"long"});
+  document.getElementById("vsum").innerHTML=
+    `<div class="big">${fmtN(sum)}<small>visitas en las semanas de ${month}</small></div>
+     <div class="per">${PLATS.map(p=>`<span><i class="dot" style="background:var(--${p.id})"></i>${p.name} ${fmtN(per[p.id])}</span>`).join("")}</div>`;
+}
+
+/* ---------- Panel del día ---------- */
+function openDay(k){
+  openKey=k;
+  const [y,m,d]=k.split("-").map(Number);
+  document.getElementById("panelTitle").textContent=new Date(y,m-1,d).toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long"});
+  renderPanel();
+  document.getElementById("backdrop").classList.add("open");
+  document.getElementById("panel").classList.add("open");
+  document.getElementById("close").focus();
+}
+function closeDay(){
+  openKey=null;
+  document.getElementById("backdrop").classList.remove("open");
+  document.getElementById("panel").classList.remove("open");
+}
+function renderPanel(){
+  const k=openKey,c=countDay(k);
+  document.getElementById("panelSub").textContent=`${c} programados, ${TOTAL-c} sin programar`;
+  const wrap=document.getElementById("slots");wrap.innerHTML="";
+  SLOTS.forEach(s=>{
+    const n=PLATS.filter(p=>isOn(k,s.id,p.id)).length;
+    const div=document.createElement("div");div.className="slot";
+    div.innerHTML=`<div class="slot-head"><div><b>${s.label}</b><span>${n} de ${PLATS.length} redes</span></div>
+      <button class="all">${n===PLATS.length?"Quitar todas":"Marcar todas"}</button></div>
+      <div class="plats">${PLATS.map(p=>`<button class="plat ${p.id}" data-p="${p.id}" aria-pressed="${isOn(k,s.id,p.id)}"><span class="check">${isOn(k,s.id,p.id)?"✓":""}</span>${p.name}</button>`).join("")}</div>`;
+    div.querySelector(".all").onclick=()=>{const v=n!==PLATS.length;PLATS.forEach(p=>setVal(k,s.id,p.id,v));commit()};
+    div.querySelectorAll(".plat").forEach(btn=>btn.onclick=()=>{setVal(k,s.id,btn.dataset.p,!isOn(k,s.id,btn.dataset.p));commit()});
+    wrap.appendChild(div);
+  });
+  document.getElementById("dayAll").textContent=c===TOTAL?"Día completo ✓":"Marcar todo el día";
+}
+function commit(){save();renderPanel();render()}
+
+document.getElementById("dayAll").onclick=()=>{SLOTS.forEach(s=>PLATS.forEach(p=>setVal(openKey,s.id,p.id,true)));commit()};
+document.getElementById("dayClear").onclick=()=>{if(confirm("¿Borrar todo lo marcado en este día?")){delete data[openKey];commit()}};
+document.getElementById("close").onclick=closeDay;
+document.getElementById("backdrop").onclick=closeDay;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&openKey)closeDay()});
+document.getElementById("prev").onclick=()=>{viewM--;if(viewM<0){viewM=11;viewY--}render()};
+document.getElementById("next").onclick=()=>{viewM++;if(viewM>11){viewM=0;viewY++}render()};
+document.getElementById("today").onclick=()=>{viewY=now.getFullYear();viewM=now.getMonth();render()};
+
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+
+/* ---------- Respaldo ---------- */
+document.getElementById("export").onclick=()=>{
+  const blob=new Blob([JSON.stringify({calendario:data,visitas:views},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`respaldo-videos-${keyDate(now)}.json`;
+  document.body.appendChild(a);a.click();a.remove();toast("Respaldo descargado");
+};
+document.getElementById("import").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);if(typeof d!=="object"||!d)throw 0;
+      if(d.calendario||d.visitas){data=d.calendario||{};views=d.visitas||{}}
+      else{data=d} // respaldo de la versión anterior
+      save();saveViews();render();toast("Respaldo cargado");
+    }catch(err){toast("Ese archivo no es un respaldo válido")}
+  };
+  r.readAsText(f);e.target.value="";
+};
+
+render();
+</script>
+</body>
+</html>
