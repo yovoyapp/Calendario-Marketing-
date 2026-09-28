@@ -91,10 +91,22 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:-.03em;line-h
 .wtotal{color:var(--muted);font-size:.9rem}
 .wtotal strong{color:var(--ink);font-size:1.35rem;font-weight:800;margin-right:4px}
 .vin{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.v{display:flex;flex-direction:column;gap:6px;font-size:.82rem;font-weight:600;border-top:4px solid var(--line);padding-top:7px}
+.v{display:flex;flex-direction:column;gap:6px;border-top:4px solid var(--line);padding-top:7px;min-width:0}
 .v.ig{border-color:var(--ig)} .v.tt{border-color:var(--tt)} .v.yt{border-color:var(--yt)} .v.tw{border-color:var(--tw)}
-.v input{width:100%;font:inherit;font-size:1.05rem;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
-.v input:focus-visible{outline:3px solid var(--today);outline-offset:1px}
+.pname{font-size:.82rem;font-weight:600}
+.ptotal{font-size:1.4rem;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+.adder{display:flex;gap:4px}
+.adder input{flex:1;min-width:0;font:inherit;font-size:1rem;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
+.adder button{flex:none;width:38px;border-radius:9px;border:none;background:var(--ink);color:var(--bg);font-size:1.25rem;font-weight:600}
+.adder input:focus-visible,.wusers input:focus-visible{outline:3px solid var(--today);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid var(--line);background:none;border-radius:999px;padding:2px 8px;font-size:.75rem;color:var(--muted)}
+.chip:hover{color:var(--ink);border-color:var(--ink)}
+.wusers{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 16px}
+.wusers label{display:flex;flex-direction:column;gap:6px;font-size:.9rem;font-weight:600}
+.wusers input{width:11em;max-width:100%;font:inherit;font-size:1.15rem;font-weight:800;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
+.udiff{color:var(--muted);font-size:.85rem;padding-bottom:10px}
+.udiff.up{color:#1E9E5A} .udiff.down{color:var(--yt)}
 
 /* Panel del día */
 .backdrop{position:fixed;inset:0;background:rgba(10,12,20,.45);display:none;z-index:10}
@@ -166,7 +178,7 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:-.03em;line-h
 
   <section class="views" aria-labelledby="viewsTitle">
     <h2 id="viewsTitle">Visitas por semana</h2>
-    <p class="intro">Escribe las visitas que obtuviste en cada red al terminar la semana. El total se suma solo.</p>
+    <p class="intro">Escribe las visitas de cada video y toca + (o Enter): se van sumando solas. Toca un número pequeño para quitarlo si te equivocaste.</p>
     <div class="vsum" id="vsum"></div>
     <div class="weeks" id="weeks"></div>
   </section>
@@ -256,47 +268,107 @@ function render(){
 }
 
 /* ---------- Visitas semanales ---------- */
-function weekTotal(k){const w=views[k]||{};return PLATS.reduce((a,p)=>a+(Number(w[p.id])||0),0)}
+function entries(k,p){const v=views[k]&&views[k][p];if(Array.isArray(v))return v;if(typeof v==="number")return [v];return []}
+function platTotal(k,p){return entries(k,p).reduce((a,b)=>a+b,0)}
+function weekTotal(k){return PLATS.reduce((a,p)=>a+platTotal(k,p.id),0)}
+function cleanWeek(k){if(views[k]&&!Object.keys(views[k]).length)delete views[k]}
+function parseAmounts(str){
+  return str.replace(/[\s.,]/g,"").split("+").map(x=>Math.round(Number(x))).filter(n=>n>0&&isFinite(n));
+}
+function prevWeekKey(start){const d=new Date(start);d.setDate(d.getDate()-7);return keyDate(d)}
+function getUsers(k){const u=views[k]&&views[k].u;return typeof u==="number"?u:null}
 function monthWeeks(){
   const list=[];let d=mondayOf(new Date(viewY,viewM,1));
   const last=new Date(viewY,viewM+1,0);
   while(d<=last){list.push(new Date(d));d.setDate(d.getDate()+7)}
   return list;
 }
+const fmtShort=x=>x.toLocaleDateString("es",{day:"numeric",month:"short"});
+
+function buildWeek(start){
+  const k=keyDate(start),thisWeek=keyDate(mondayOf(now));
+  const end=new Date(start);end.setDate(end.getDate()+6);
+  const card=document.createElement("div");
+  card.className="week"+(k===thisWeek?" current":"");
+  card.dataset.k=k;
+  const u=getUsers(k);
+  card.innerHTML=`<div class="week-head"><b>${fmtShort(start)} – ${fmtShort(end)}${k===thisWeek?"<em>esta semana</em>":""}</b>
+      <span class="wtotal"><strong>${fmtN(weekTotal(k))}</strong>visitas en la semana</span></div>
+    <div class="vin">${PLATS.map(p=>`<div class="v ${p.id}">
+        <span class="pname">${p.name}</span>
+        <div class="ptotal">${fmtN(platTotal(k,p.id))}</div>
+        <div class="adder"><input type="text" inputmode="numeric" placeholder="Sumar" data-p="${p.id}" aria-label="Visitas a sumar en ${p.name}"><button data-p="${p.id}" aria-label="Sumar a ${p.name}">+</button></div>
+        <div class="chips">${entries(k,p.id).map((n,i)=>`<button class="chip" data-p="${p.id}" data-i="${i}" aria-label="Quitar ${fmtN(n)}" title="Quitar">${fmtN(n)} ×</button>`).join("")}</div>
+      </div>`).join("")}</div>
+    <div class="wusers">
+      <label>Usuarios de la app al terminar la semana
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="0" class="uin" value="${u!=null?u:""}">
+      </label>
+      <span class="udiff"></span>
+    </div>`;
+
+  const add=(pid)=>{
+    const inp=card.querySelector(`.adder input[data-p="${pid}"]`);
+    const nums=parseAmounts(inp.value);
+    if(!nums.length){inp.focus();return}
+    views[k]=views[k]||{};
+    views[k][pid]=entries(k,pid).concat(nums);
+    saveViews();refreshWeek(start,pid);
+  };
+  card.querySelectorAll(".adder button").forEach(b=>b.onclick=()=>add(b.dataset.p));
+  card.querySelectorAll(".adder input").forEach(i=>i.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add(i.dataset.p)}});
+  card.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{
+    const arr=entries(k,c.dataset.p).slice();arr.splice(Number(c.dataset.i),1);
+    views[k]=views[k]||{};
+    if(arr.length)views[k][c.dataset.p]=arr;else delete views[k][c.dataset.p];
+    cleanWeek(k);saveViews();refreshWeek(start,null);
+  });
+
+  const uin=card.querySelector(".uin");
+  const showDiff=()=>{
+    const el=card.querySelector(".udiff"),cur=getUsers(k),prev=getUsers(prevWeekKey(start));
+    el.className="udiff";
+    if(cur==null){el.textContent="";return}
+    if(prev==null){el.textContent="Sin dato de la semana anterior";return}
+    const d=cur-prev;
+    el.textContent=d===0?"Igual que la semana anterior":`${d>0?"+":""}${fmtN(d)} vs. la semana anterior`;
+    el.classList.add(d>0?"up":d<0?"down":"x");
+  };
+  uin.oninput=()=>{
+    const n=uin.value===""?NaN:Math.max(0,Math.round(Number(uin.value)));
+    views[k]=views[k]||{};
+    if(isNaN(n))delete views[k].u;else views[k].u=n;
+    cleanWeek(k);saveViews();showDiff();renderViewsSummary();
+  };
+  uin.onchange=()=>renderViews(); // actualiza la diferencia de la semana siguiente
+  showDiff();
+  return card;
+}
+function refreshWeek(start,focusPid){
+  const box=document.getElementById("weeks");
+  const old=box.querySelector(`.week[data-k="${keyDate(start)}"]`);
+  const fresh=buildWeek(start);
+  old?box.replaceChild(fresh,old):box.appendChild(fresh);
+  if(focusPid)fresh.querySelector(`.adder input[data-p="${focusPid}"]`).focus();
+  renderViewsSummary();
+}
 function renderViews(){
   const box=document.getElementById("weeks");box.innerHTML="";
-  const fmt=x=>x.toLocaleDateString("es",{day:"numeric",month:"short"});
-  const thisWeek=keyDate(mondayOf(now));
-  monthWeeks().forEach(start=>{
-    const k=keyDate(start);
-    const end=new Date(start);end.setDate(end.getDate()+6);
-    const card=document.createElement("div");
-    card.className="week"+(k===thisWeek?" current":"");
-    card.innerHTML=`<div class="week-head"><b>${fmt(start)} – ${fmt(end)}${k===thisWeek?"<em>esta semana</em>":""}</b><span class="wtotal"></span></div>
-      <div class="vin">${PLATS.map(p=>{const v=views[k]&&views[k][p.id]!=null?views[k][p.id]:"";
-        return `<label class="v ${p.id}"><span>${p.name}</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="0" data-p="${p.id}" value="${v}"></label>`}).join("")}</div>`;
-    const upd=()=>{card.querySelector(".wtotal").innerHTML=`<strong>${fmtN(weekTotal(k))}</strong>visitas en la semana`};
-    card.querySelectorAll("input").forEach(inp=>{
-      inp.oninput=()=>{
-        const n=inp.value===""?NaN:Math.max(0,Math.round(Number(inp.value)));
-        views[k]=views[k]||{};
-        if(isNaN(n))delete views[k][inp.dataset.p];else views[k][inp.dataset.p]=n;
-        if(!Object.keys(views[k]).length)delete views[k];
-        saveViews();upd();renderViewsSummary();
-      };
-    });
-    upd();box.appendChild(card);
-  });
+  monthWeeks().forEach(s=>box.appendChild(buildWeek(s)));
   renderViewsSummary();
 }
 function renderViewsSummary(){
-  const per={ig:0,tt:0,yt:0,tw:0};
-  monthWeeks().forEach(s=>{const w=views[keyDate(s)]||{};PLATS.forEach(p=>per[p.id]+=Number(w[p.id])||0)});
+  const per={ig:0,tt:0,yt:0,tw:0};let lastUsers=null,lastLabel="";
+  monthWeeks().forEach(s=>{
+    const k=keyDate(s);PLATS.forEach(p=>per[p.id]+=platTotal(k,p.id));
+    const u=getUsers(k);if(u!=null){lastUsers=u;lastLabel=fmtShort(s)}
+  });
   const sum=Object.values(per).reduce((a,b)=>a+b,0);
   const month=new Date(viewY,viewM,1).toLocaleDateString("es",{month:"long"});
   document.getElementById("vsum").innerHTML=
     `<div class="big">${fmtN(sum)}<small>visitas en las semanas de ${month}</small></div>
-     <div class="per">${PLATS.map(p=>`<span><i class="dot" style="background:var(--${p.id})"></i>${p.name} ${fmtN(per[p.id])}</span>`).join("")}</div>`;
+     <div class="per">${PLATS.map(p=>`<span><i class="dot" style="background:var(--${p.id})"></i>${p.name} ${fmtN(per[p.id])}</span>`).join("")}
+     ${lastUsers!=null?`<span>Usuarios: ${fmtN(lastUsers)} (semana del ${lastLabel})</span>`:""}</div>`;
 }
 
 /* ---------- Panel del día ---------- */
