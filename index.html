@@ -1,1 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Videos de la semana · Yo Voy App</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0F4; --surface:#FFFFFF; --ink:#1A1F2B; --muted:#6B7285; --line:#DADDE5; --empty:#E4E7EE;
+  --rea:#F0532F; --con:#14A06A; --mar:#6B4BEF; --up:#14A06A; --down:#D93A2B; --focus:#3A3FD6;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11141B; --surface:#1A1F29; --ink:#EEF0F6; --muted:#9097AA; --line:#2B3241; --empty:#262C3A;
+    --rea:#FF6A47; --con:#2BC584; --mar:#8B70FF; --up:#2BC584; --down:#FF6155; --focus:#8A8FFF;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11141B; --surface:#1A1F29; --ink:#EEF0F6; --muted:#9097AA; --line:#2B3241; --empty:#262C3A;
+  --rea:#FF6A47; --con:#2BC584; --mar:#8B70FF; --up:#2BC584; --down:#FF6155; --focus:#8A8FFF;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 56px}
 
+h1{font-size:clamp(1.8rem,7vw,2.6rem);font-weight:800;letter-spacing:-.03em;line-height:1;margin:0 0 16px}
+h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin:0 0 4px}
+.muted{color:var(--muted)}
+
+/* Navegación de semanas */
+.weeknav{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.weeknav .arrow{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:1.3rem}
+.weeknav .range{flex:1;text-align:center}
+.weeknav .range b{display:block;font-size:1.1rem}
+.weeknav .range span{font-size:.85rem;color:var(--muted)}
+.weeknav .hoy{flex:none;height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:.9rem}
+
+/* Número de la semana */
+.score{background:var(--ink);color:var(--bg);border-radius:18px;padding:18px;margin-bottom:14px}
+.score .num{font-size:clamp(3rem,15vw,4.2rem);font-weight:800;letter-spacing:-.04em;line-height:.95}
+.score .num small{font-size:1.4rem;opacity:.6;font-weight:600}
+.score .lab{opacity:.75;margin:4px 0 12px}
+.segs{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+.segs i{height:10px;border-radius:3px;background:rgba(127,127,127,.35)}
+.segs i.rea{background:var(--rea)} .segs i.con{background:var(--con)} .segs i.mar{background:var(--mar)}
+.score .split{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;font-size:.9rem}
+.score .split span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+/* Grupos */
+.group{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;border-left:6px solid var(--c)}
+.group.rea{--c:var(--rea)} .group.con{--c:var(--con)} .group.mar{--c:var(--mar)}
+.ghead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px}
+.ghead h3{margin:0;font-size:1.2rem;font-weight:800}
+.ghead .count{font-weight:800;font-size:1.2rem}
+.ghead .count.ok{color:var(--c)}
+.gsub{color:var(--muted);font-size:.88rem;margin:0 0 12px}
+
+.rrow{display:grid;grid-template-columns:4.5em 1fr 1fr;gap:8px;align-items:center;padding:6px 0}
+.rrow .vl{font-weight:600;font-size:.95rem}
+.rrow .vl small{display:block;font-weight:400;color:var(--muted);font-size:.75rem}
+.tog{min-height:46px;border-radius:12px;border:2px solid var(--line);background:transparent;font-weight:600;font-size:.95rem;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,border-color .15s,color .15s}
+.tog .box{width:20px;height:20px;border-radius:6px;border:2px solid currentColor;display:grid;place-items:center;font-size:.8rem;opacity:.45}
+.tog[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}
+.tog[aria-pressed="true"] .box{opacity:1;background:rgba(255,255,255,.25)}
+
+.squares{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sq{aspect-ratio:1/1;max-height:90px;border-radius:14px;border:2px solid var(--line);background:transparent;font-weight:800;font-size:1.3rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:background .15s,border-color .15s,color .15s}
+.sq small{font-size:.72rem;font-weight:600;opacity:.7}
+.sq[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}
+.single .tog{width:100%}
+
+/* Historial */
+.hist{margin:22px 0 0}
+.hist h3{font-size:1rem;margin:0 0 8px}
+.hlist{display:grid;gap:6px}
+.hitem{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:left}
+.hitem .bar{grid-column:1/-1;height:6px;border-radius:3px;background:var(--empty);overflow:hidden}
+.hitem .bar span{display:block;height:100%;background:var(--ink)}
+.hitem b{font-weight:800}
+
+/* Usuarios */
+.users{margin-top:44px}
+.ucard{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;margin:12px 0}
+.ubig{font-size:clamp(2.6rem,12vw,3.6rem);font-weight:800;letter-spacing:-.03em;line-height:1}
+.ugain{font-size:1.15rem;font-weight:700;margin-top:6px}
+.ugain.up{color:var(--up)} .ugain.down{color:var(--down)}
+.uform{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.uform label{display:flex;flex-direction:column;gap:6px;font-size:.88rem;font-weight:600}
+.uform input{width:100%;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:1rem}
+.uform button{grid-column:1/-1;min-height:48px;border:none;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:700;font-size:1rem}
+.uerr{grid-column:1/-1;color:var(--down);font-size:.88rem;margin:0;min-height:0}
+.ulist{margin-top:12px;display:grid;gap:6px}
+.uitem{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.uitem .d{font-size:.92rem}
+.uitem .n{font-weight:800}
+.uitem .g{font-size:.85rem;font-weight:700;min-width:4.5em;text-align:right}
+.uitem .g.up{color:var(--up)} .uitem .g.down{color:var(--down)} .uitem .g.none{color:var(--muted);font-weight:400}
+.uitem .del{grid-column:1/-1;justify-self:start;border:none;background:none;color:var(--muted);font-size:.8rem;padding:0;text-decoration:underline}
+
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:36px}
+.tools button,.tools label{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.9rem;cursor:pointer}
+.tools input{display:none}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:5}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Videos de la semana</h1>
+
+  <div class="weeknav">
+    <button class="arrow" id="prev" aria-label="Semana anterior">‹</button>
+    <div class="range"><b id="rangeTxt"></b><span id="rangeSub"></span></div>
+    <button class="arrow" id="next" aria-label="Semana siguiente">›</button>
+    <button class="hoy" id="hoy">Hoy</button>
+  </div>
+
+  <div class="score" id="score"></div>
+  <div id="groups"></div>
+
+  <div class="hist">
+    <h3>Semanas anteriores</h3>
+    <div class="hlist" id="hist"></div>
+  </div>
+
+  <section class="users" aria-labelledby="usersTitle">
+    <h2 id="usersTitle">Usuarios de la app</h2>
+    <p class="muted" style="margin:0">Cada domingo escribe cuántos usuarios tiene la app.</p>
+    <div class="ucard" id="ucard"></div>
+    <form class="uform" id="uform">
+      <label>Domingo<input type="date" id="udate" required></label>
+      <label>Usuarios<input type="number" id="unum" inputmode="numeric" min="0" step="1" placeholder="0" required></label>
+      <p class="uerr" id="uerr"></p>
+      <button type="submit">Guardar</button>
+    </form>
+    <div class="ulist" id="ulist"></div>
+  </section>
+
+  <div class="tools">
+    <button id="export">Descargar respaldo</button>
+    <label>Cargar respaldo<input type="file" id="import" accept="application/json"></label>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const WKEY="semanas-videos-v2", UKEY="usuarios-domingo-v1";
+function load(k){try{return JSON.parse(localStorage.getItem(k))||{}}catch(e){return {}}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast("No se pudo guardar en este navegador")}}
+let weeks=load(WKEY), users=load(UKEY);
+
+const pad=n=>String(n).padStart(2,"0");
+const keyDate=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseKey=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const fmtN=n=>Number(n).toLocaleString("es");
+const fmtShort=d=>d.toLocaleDateString("es",{day:"numeric",month:"short"});
+const fmtLong=d=>d.toLocaleDateString("es",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+function mondayOf(date){const d=new Date(date.getFullYear(),date.getMonth(),date.getDate());d.setDate(d.getDate()-((d.getDay()+6)%7));return d}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+
+const today=new Date();
+let cur=mondayOf(today);
+
+/* ---------- Datos de la semana ---------- */
+function getWeek(k){
+  const w=weeks[k]||{};
+  return {
+    r:[0,1,2,3].map(i=>[!!(w.r&&w.r[i]&&w.r[i][0]),!!(w.r&&w.r[i]&&w.r[i][1])]),
+    c:[0,1,2,3].map(i=>!!(w.c&&w.c[i])),
+    m:[!!(w.m&&w.m[0])]
+  };
+}
+function setWeek(k,w){
+  const empty=!w.r.flat().some(Boolean)&&!w.c.some(Boolean)&&!w.m.some(Boolean);
+  if(empty)delete weeks[k];else weeks[k]=w;
+  store(WKEY,weeks);
+}
+function counts(w){
+  return {rea:w.r.filter(x=>x[0]&&x[1]).length, con:w.c.filter(Boolean).length, mar:w.m.filter(Boolean).length};
+}
+
+/* ---------- Render semana ---------- */
+function render(){
+  const k=keyDate(cur), sun=addDays(cur,6), w=getWeek(k), c=counts(w), total=c.rea+c.con+c.mar;
+  const isThis=k===keyDate(mondayOf(today));
+  document.getElementById("rangeTxt").textContent=`${fmtShort(cur)} – ${fmtShort(sun)}`;
+  document.getElementById("rangeSub").textContent=isThis?"Esta semana":(cur<mondayOf(today)?"Semana pasada":"Semana futura");
+
+  const segs=[];
+  for(let i=0;i<4;i++)segs.push(i<c.rea?"rea":"");
+  for(let i=0;i<4;i++)segs.push(i<c.con?"con":"");
+  segs.push(c.mar?"mar":"");
+  document.getElementById("score").innerHTML=
+    `<div class="num">${total}<small> / 9</small></div>
+     <div class="lab">${total===9?"¡Semana completa! 🎉":`Te faltan ${9-total} videos esta semana`}</div>
+     <div class="segs">${segs.map(s=>`<i class="${s}"></i>`).join("")}</div>
+     <div class="split">
+       <span><i class="dot" style="background:var(--rea)"></i>Reacción ${c.rea}/4</span>
+       <span><i class="dot" style="background:var(--con)"></i>Conversión ${c.con}/4</span>
+       <span><i class="dot" style="background:var(--mar)"></i>Marca ${c.mar}/1</span>
+     </div>`;
+
+  const g=document.getElementById("groups");
+  g.innerHTML=`
+    <div class="group rea">
+      <div class="ghead"><h3>Videos de reacción</h3><span class="count ${c.rea===4?"ok":""}">${c.rea}/4</span></div>
+      <p class="gsub">Van a tu cuenta personal y a TikTok. Cuenta cuando está en las dos.</p>
+      ${w.r.map((pair,i)=>`<div class="rrow">
+        <span class="vl">Video ${i+1}<small>${pair[0]&&pair[1]?"Listo":pair[0]||pair[1]?"Falta 1":"Pendiente"}</small></span>
+        <button class="tog" data-t="r" data-i="${i}" data-j="0" aria-pressed="${pair[0]}"><span class="box">${pair[0]?"✓":""}</span>Personal</button>
+        <button class="tog" data-t="r" data-i="${i}" data-j="1" aria-pressed="${pair[1]}"><span class="box">${pair[1]?"✓":""}</span>TikTok</button>
+      </div>`).join("")}
+    </div>
+    <div class="group con">
+      <div class="ghead"><h3>Videos de conversión</h3><span class="count ${c.con===4?"ok":""}">${c.con}/4</span></div>
+      <p class="gsub">Cuenta de Yo Voy App.</p>
+      <div class="squares">${w.c.map((v,i)=>`<button class="sq" data-t="c" data-i="${i}" aria-pressed="${v}" aria-label="Conversión ${i+1}">${v?"✓":i+1}<small>${v?"Listo":"Video"}</small></button>`).join("")}</div>
+    </div>
+    <div class="group mar single">
+      <div class="ghead"><h3>Video de marca</h3><span class="count ${c.mar===1?"ok":""}">${c.mar}/1</span></div>
+      <p class="gsub">Cuenta de Yo Voy App.</p>
+      <button class="tog" data-t="m" data-i="0" aria-pressed="${w.m[0]}"><span class="box">${w.m[0]?"✓":""}</span>${w.m[0]?"Publicado":"Marcar como publicado"}</button>
+    </div>`;
+
+  g.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{
+    const ww=getWeek(k),i=Number(b.dataset.i);
+    if(b.dataset.t==="r"){const j=Number(b.dataset.j);ww.r[i][j]=!ww.r[i][j]}
+    else if(b.dataset.t==="c")ww.c[i]=!ww.c[i];
+    else ww.m[i]=!ww.m[i];
+    setWeek(k,ww);
+    const sel=`[data-t="${b.dataset.t}"][data-i="${i}"]`+(b.dataset.j?`[data-j="${b.dataset.j}"]`:"");
+    render();
+    const again=document.querySelector(sel);if(again)again.focus({preventScroll:true});
+  });
+  renderHist();
+}
+
+function renderHist(){
+  const box=document.getElementById("hist");box.innerHTML="";
+  const thisMon=mondayOf(today);
+  for(let n=1;n<=6;n++){
+    const mon=addDays(thisMon,-7*n),k=keyDate(mon),c=counts(getWeek(k)),t=c.rea+c.con+c.mar;
+    const b=document.createElement("button");b.className="hitem";
+    b.innerHTML=`<span>${fmtShort(mon)} – ${fmtShort(addDays(mon,6))}</span><b>${t}/9</b><span class="bar"><span style="width:${t/9*100}%"></span></span>`;
+    b.onclick=()=>{cur=mon;render();window.scrollTo({top:0,behavior:"smooth"})};
+    box.appendChild(b);
+  }
+}
+
+document.getElementById("prev").onclick=()=>{cur=addDays(cur,-7);render()};
+document.getElementById("next").onclick=()=>{cur=addDays(cur,7);render()};
+document.getElementById("hoy").onclick=()=>{cur=mondayOf(today);render()};
+
+/* ---------- Usuarios por domingo ---------- */
+function lastSunday(){const d=new Date(today.getFullYear(),today.getMonth(),today.getDate());d.setDate(d.getDate()-d.getDay());return d}
+function renderUsers(){
+  const keys=Object.keys(users).sort();
+  const card=document.getElementById("ucard"), list=document.getElementById("ulist");
+  if(!keys.length){
+    card.innerHTML=`<div class="ubig">—</div><div class="muted" style="margin-top:6px">Todavía no hay datos. Escribe los usuarios del domingo abajo.</div>`;
+    list.innerHTML="";return;
+  }
+  const last=keys[keys.length-1], prev=keys[keys.length-2];
+  const gain=prev!=null?users[last]-users[prev]:null;
+  card.innerHTML=`<div class="muted">Domingo ${fmtShort(parseKey(last))}</div>
+    <div class="ubig">${fmtN(users[last])} <span style="font-size:1rem;font-weight:600" class="muted">usuarios</span></div>
+    <div class="ugain ${gain>0?"up":gain<0?"down":""}">${gain==null?"Aún no hay domingo anterior para comparar":gain===0?"Igual que el domingo anterior":`${gain>0?"+":""}${fmtN(gain)} ${Math.abs(gain)===1?"usuario":"usuarios"} vs. el domingo anterior`}</div>`;
+  list.innerHTML="";
+  keys.slice().reverse().forEach(k=>{
+    const i=keys.indexOf(k), p=i>0?keys[i-1]:null, g=p?users[k]-users[p]:null;
+    const row=document.createElement("div");row.className="uitem";
+    row.innerHTML=`<span class="d">Dom ${fmtShort(parseKey(k))}</span><span class="n">${fmtN(users[k])}</span>
+      <span class="g ${g==null?"none":g>0?"up":g<0?"down":""}">${g==null?"—":`${g>0?"+":""}${fmtN(g)}`}</span>
+      <button class="del" type="button">Borrar</button>`;
+    row.querySelector(".del").onclick=()=>{if(confirm(`¿Borrar el dato del domingo ${fmtShort(parseKey(k))}?`)){delete users[k];store(UKEY,users);renderUsers()}};
+    list.appendChild(row);
+  });
+}
+const udate=document.getElementById("udate"), unum=document.getElementById("unum"), uerr=document.getElementById("uerr");
+udate.value=keyDate(lastSunday());
+document.getElementById("uform").onsubmit=e=>{
+  e.preventDefault();uerr.textContent="";
+  const d=udate.value?parseKey(udate.value):null;
+  const n=Math.round(Number(unum.value));
+  if(!d){uerr.textContent="Elige la fecha del domingo.";return}
+  if(d.getDay()!==0){uerr.textContent="Esa fecha no es domingo. Elige un domingo.";return}
+  if(unum.value===""||isNaN(n)||n<0){uerr.textContent="Escribe un número de usuarios válido.";return}
+  users[udate.value]=n;store(UKEY,users);renderUsers();
+  unum.value="";toast("Guardado");
+};
+
+/* ---------- Respaldo ---------- */
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000)}
+document.getElementById("export").onclick=()=>{
+  const blob=new Blob([JSON.stringify({semanas:weeks,usuarios:users},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`respaldo-yovoy-${keyDate(today)}.json`;
+  document.body.appendChild(a);a.click();a.remove();toast("Respaldo descargado");
+};
+document.getElementById("import").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const d=JSON.parse(r.result);if(!d||typeof d!=="object"||!(d.semanas||d.usuarios))throw 0;
+    weeks=d.semanas||{};users=d.usuarios||{};store(WKEY,weeks);store(UKEY,users);render();renderUsers();toast("Respaldo cargado");
+  }catch(err){toast("Ese archivo no es un respaldo válido")}};
+  r.readAsText(f);e.target.value="";
+};
+
+render();
+renderUsers();
+</script>
+</body>
+</html>
